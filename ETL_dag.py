@@ -5,7 +5,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
-from new_modul import transfer
+from main_func import transfer
 
 with DAG(dag_id='ETL_dag',
          schedule_interval='@once',

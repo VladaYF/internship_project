@@ -1,43 +1,50 @@
 import pandas as pd
+import numpy as np 
 
-def df_filter_stock(data):
+def df_filter_stock(data, product_primary_key = None):
+
+    print('СТАРТ ФИЛЬТРАЦИИ')
     # delete DUBLICATES
     data = data.drop_duplicates(subset=['product_id','pos', 'available_on'])
     print('DUBLICATES_MOVED')
 
-    # define a variable to store error rows
-    df_error = pd.DataFrame(columns = ['product_id','pos', 'available_on', 
-                                       'cost_per_item', 'available_quantity', 'error'])
-    
-    def check_errors(row):
-        errors = []
-        # check empty values
-        if row.isna().any():
-            errors.append('empty_value')          
-        # check data type
-        try:
-            int(row['product_id'])
-            int(row['available_on'])
-            float(row['cost_per_item'])
-            float(row['available_quantity'])
-        except ValueError:
-            errors.append('not_number')   
+    # define a variable to store error rows and error_storage
+    df_error = pd.DataFrame(columns=list(data.columns) + ['error'])
+    storage_error = {}
 
-        # check non-negative integers
-        if row['available_quantity'] == '0' or (not str(row['available_quantity']).isdigit()):
-            errors.append('non-negative or notintegers') 
-        # add error row to df_error
-        if errors:
-            error_row = row.copy()
-            error_row['error'] = ', '.join(errors)
-            df_error.loc[len(df_error)] = error_row
-            return False
-        else:
-            return True
-    
-    # stars filter process
-    print('СТАРТ ФИЛЬТРАЦИИ')
-    data = data[data.apply(check_errors, axis=1)]
+    storage_error['empty_value'] = list(*np.where(data['product_id'] == '')) + list(*np.where(data['pos'] == '')) + list(*np.where(data['available_on'] == ''))
 
+    print(storage_error)
+
+    df_error = data.iloc[storage_error['empty_value']]
+    df_error['error'] = 'empty_value'
+
+    data.drop(data.iloc[storage_error['empty_value']].index, inplace=True)
+
+    storage_error['not_number'] = list(*np.where(~data['product_id'].str.isdigit())) + list(*np.where(~data['pos'].str.isdigit()))
+
+    df_error = df_error.append(data.iloc[storage_error['not_number']])
+    df_error['error'] = df_error['error'].fillna('not_number')
+
+    data.drop(data.iloc[storage_error['not_number']].index, inplace=True)
+
+    # non-negative or notintegers
+    storage_error['non_negative'] = list(*np.where(data['available_quantity'] == '0'))
+
+    df_error = df_error.append(data.iloc[storage_error['non_negative']])
+    df_error['error'] = df_error['error'].fillna('non_negative')
+
+    data.drop(data.iloc[storage_error['non_negative']].index, inplace=True)
+
+    # check primary key
+    # storage_error['not_in_primary_key'] = list(*np.where(data['product_id'] not in product_primary_key))
+
+    # df_error = df_error.append(data.iloc[storage_error['not_in_primary_key']])
+    # df_error['error'] = df_error['error'].fillna('not_in_primary_key')
+
+    # data.drop(data.iloc[storage_error['not_in_primary_key']].index, inplace=True)
+        
     print('ФИЛЬТРАЦИЯ УСПЕШНА')
-    return data, df_error        
+    return data, df_error  
+
+
