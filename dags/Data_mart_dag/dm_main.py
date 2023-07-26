@@ -21,7 +21,8 @@ def transfet_to_data_mart():
 
     with get_connect('internship_1_db') as conn:
         with conn.cursor() as curs:
-            select_query = '''
+            select_insert_query = '''
+                INSERT INTO data_mart.sales (product_id, name_short, quantity, price, price_full, value_by_money, brand, category_name)
                 SELECT p.product_id, p.name_short, s.quantity, s.price, s.price_full, (s.quantity * s.price_full) as value_by_money, b.brand, c.category_name
                 FROM dds.product p
                 JOIN dds.brand b ON p.brand_id = b.brand_id
@@ -32,31 +33,25 @@ def transfet_to_data_mart():
                     GROUP BY product_id
                 ) s ON p.product_id = s.product_id;
             '''
-
             print('START TRUNC data_mart.sales')
             trunc = " truncate table data_mart.sales "
-            curs.execute(select_query, trunc)
-            results = curs.fetchall()
-
+            curs.execute(trunc)
             print('START LOAD data_mart.sales')
-            insert_query = "INSERT INTO data_mart.sales (product_id, name_short, quantity, price, price_full, value_by_money, brand, category_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-            curs.executemany(insert_query, results)
-            conn.commit()
 
-            select_query = '''
-                SELECT p.product_id, p.name_short, st.available_quantity, st.COST_PER_ITEM, st.pos, b.brand, c.category_name,  (st.available_quantity > 50) AS little_reserve
+            curs.execute(select_insert_query)
+
+            print('START TRUNC data_mart.stock_mart')
+            trunc = " truncate table data_mart.stock_mart "
+            curs.execute(trunc)
+            print('START LOAD data_mart.stock_mart')
+            insert_query = """
+                INSERT INTO data_mart.stock_mart (product_id, name_short, available_quantity, COST_PER_ITEM, pos, brand, category_name, little_reserve)
+                SELECT p.product_id, p.name_short, st.available_quantity, st.COST_PER_ITEM, st.pos, b.brand, c.category_name, (st.available_quantity > 50) AS little_reserve
                 FROM dds.product p
                 JOIN dds.brand b ON p.brand_id = b.brand_id
                 JOIN dds.category c ON p.category_id = c.category_id
                 JOIN dds.stock st ON p.product_id = st.product_id;
-            '''
+            """
+            curs.execute(insert_query)
 
-            print('START TRUNC data_mart.stock_mart')
-            trunc = " truncate table data_mart.stock_mart "
-            curs.execute(select_query, trunc)
-            results = curs.fetchall()
-
-            print('START LOAD data_mart.stock_mart')
-            insert_query = "INSERT INTO data_mart.stock_mart (product_id, name_short, available_quantity, COST_PER_ITEM, pos, brand, category_name, little_reserve) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-            curs.executemany(insert_query, results)
     return
