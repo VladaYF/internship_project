@@ -26,3 +26,4 @@ with DAG(dag_id='ETL_dag_Data_Mart',
         task_id='transfer_data', python_callable=transfet_to_data_mart)
 
 trigger_ETL_dag_DDS >> start_step >> transfer_data
+
