@@ -11,6 +11,8 @@ from DDS_dag.tables.check_transaction import df_filter_transaction
 from DDS_dag.tables.check_category import df_filter_category
 from DDS_dag.tables.check_product import df_filter_product
 from DDS_dag.tables.check_stock import df_filter_stock
+from DDS_dag.tables.check_pos import df_filter_pos
+
 
 from DDS_dag.common_funcs import get_data, load_data
 
@@ -77,7 +79,7 @@ def transfer():
 
     # stars filter
     print('НАЧАЛО ФИЛЬТРАЦИИ transaction')
-    cleared_df_transaction, df_error_transaction = df_filter_transaction(
+    cleared_df_transaction, df_error_transaction, transaction_id_primary_key = df_filter_transaction(
         transaction_data, product_primary_key)
 
     storage['transaction'] = [cleared_df_transaction, df_error_transaction]
@@ -96,12 +98,30 @@ def transfer():
 
     storage['stock'] = [cleared_df_stock, df_error_stock]
 
-    # stars loading
-    print('НАЧАЛО ЗАГРУЗКИ В ИТОГ stock')
 
-    tables = ['brand', 'category', 'product', 'transaction', 'stock']
+     # stock pos
+
+    print('НАЧАЛО ЗАГРУЗКИ ИЗ БД pos')
+    # start EXTRACT from csv file
+    pos_data = pd.read_csv('/opt/airflow/dags/DDS_dag/транзакции_магазины.csv', sep = ';')
+
+    print('EXTRACT CSV SUCCESS')
+    # stars filter
+    print('НАЧАЛО ФИЛЬТРАЦИИ')
+    cleared_df_pos, df_error_pos = df_filter_pos(
+        pos_data, transaction_id_primary_key)
+
+    storage['pos'] = [cleared_df_pos, df_error_pos]
+
+
+    # stars loading
+    print('НАЧАЛО ЗАГРУЗКИ В ИТОГ')
+
+    tables = ['brand', 'category', 'product', 'transaction', 'stock', 'pos']
     error_tables = ['error_brand', 'error_category',
-                    'error_product', 'error_transaction', 'error_stock']
+                    'error_product', 'error_transaction', 'error_stock', 'error_stores']
 
     print('НАЧАЛО ЗАГРУЗКИ В ИТОГ')
     load_data(tables, error_tables, storage)
+
+    
