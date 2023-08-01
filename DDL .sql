@@ -115,7 +115,7 @@ CREATE TABLE error_transaction (
     error VARCHAR
 );
 
-CREATE TABLE stores (
+CREATE TABLE pos (
     transaction_id varchar,
     pos varchar, 
     error VARCHAR)
