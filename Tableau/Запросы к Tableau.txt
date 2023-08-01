@@ -11,8 +11,12 @@ Stock:
 
 Остальные операции выполнялись с помощью Drag and Drop 
 
-Файл с дашбордом загружен в репозиторий. Для его просмотра понадобится установленный tableau. 
+Файлы-дашборд загружены в репозиторий. Для его просмотра понадобится установленный tableau. 
 
 Так же, возможен просмотр по ссылке  (работает только с ВПН) в Tableau Cloud:
+sales_dashbord: 
 
 https://prod-apnortheast-a.online.tableau.com/t/httpseduexkorusconsultingru/views/sales_dashbord/Story1
+
+stock_dashbord:
+https://prod-apnortheast-a.online.tableau.com/#/site/httpseduexkorusconsultingru/workbooks/1078306?:origin=card_share_link
